@@ -70,6 +70,8 @@ function handle_task($queueName, $taskName, $body = '')
         throw new Exception('Bad Request - Invalid Task');
     }
 
+    sleep(60 * 10);
+
     $output = sprintf('Completed task: task queue(%s), task name(%s), payload(%s)', $queueName, $taskName, $body);
     $logger->info($output);
 
