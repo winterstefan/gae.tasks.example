@@ -1,53 +1,33 @@
-# Google Cloud Tasks Handler on App Engine Standard for PHP 7.2
+# Example project for 10-task-limit
 
-The Task Handler sample application demonstrates how to handle a task from a Cloud Tasks Appengine Queue.
+This source code was taken from the [official php-docs-sample repository](https://github.com/GoogleCloudPlatform/php-docs-samples/tree/master/appengine/php72/tasks/apps/handler).
 
-## Setup the sample
+## Basics
 
-- Install [`composer`](https://getcomposer.org)
-- Install dependencies by running:
-    ```sh
-    composer install
+This is a dummy project, configured with a small queue and task handler. Each task will take
+about 10 minutes to process (simple `sleep()`), the queue is configured to run 1.000 tasks at most.
+
+The GAE is configured to have up to 3 instances running. 
+
+## How to reproduce
+
+1. Check out this source code
+2. Optional: Create new Google Cloud project
+3. Use `gcloud` CLI to deploy both app and queue: `gcloud app deploy app.yaml queue.yaml`
+4. Visit [queue detail view](https://console.cloud.google.com/cloudtasks/queue/my-queue) and **pause** the queue
+5. Generate 100 sample tasks, for example via CLI (or possibly via `snippets/src/create_task.php`)
     ```
-- Install the [Google Cloud SDK](https://developers.google.com/cloud/sdk/).
+   gcloud tasks create-app-engine-task  --queue=my-queue --relative-uri="/task_handler" --method="POST" --body-content="hello1" --project=[YOUR-PROJECT-ID]
+   ```
+6. **Unpause** queue, wait a couple of seconds and view number of running tasks.
 
-## Deploy the sample
 
-### Deploy with `gcloud`
+## Expected behaviour
 
-Deploy the samples by doing the following:
+All 100 tasks from the queue are marked as in progress.
 
-```
-gcloud config set project YOUR_PROJECT_ID
-gcloud app deploy
-gcloud app browse
-```
+## My current behaviour
 
-The last command will open `https://{YOUR_PROJECT_ID}.appspot.com/`
-in your browser. Browse to `/` to send in some logs.
-
-### Run Locally
-
-Run the sample locally using PHP's build-in web server:
-
-```
-# export environemnt variables locally which are set by App Engine when deployed
-export GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json
-export GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
-
-# Run PHP's built-in web server
-php -S localhost:8000
-```
-
-Browse to `localhost:8000` to send in the logs.
-
-> Note: These logs will show up under the `Global` resource since you are not
-actually sending these from App Engine.
-
-## Contributing changes
-
-* See [CONTRIBUTING.md](../../CONTRIBUTING.md)
-
-## Licensing
-
-* See [LICENSE](../../LICENSE)
+Just 30 tasks are being processed at a time. If I modify the `basic_scaling.max_instances`,
+I'll get a hard limit of 
+`10 * [RUNNING INSTANCE COUNT]` (e.g. 50 running for 5 instances, 70 running for 7 instances).
